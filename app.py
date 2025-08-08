@@ -10,6 +10,7 @@ from datetime import datetime
 
 app = FastAPI()
 
+#Allow CORS requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -18,6 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+#Helper function, returns all recent articles from all feeds
 def fetch_feeds():
     all_items = []
 
@@ -42,6 +44,8 @@ class ArticleOut(BaseModel):
     title: str
     link: str
 
+#Endpoint, returns the title, link, published date of the 
+#100 most recent articles in the database
 @app.get("/feeds")
 def get_feeds():
     with db.engine.begin() as connection:
@@ -60,11 +64,13 @@ def get_feeds():
         
         return [ArticleOut(**row) for row in rows] 
 
+#Enpoint, updates articles table with recent articles
+#TODO: Schedule with cron job
 @app.get("/update_feeds")
 def update_feeds():
     items = fetch_feeds()
 
-    # Get feed name → id mapping
+    # Get feed name to id mapping
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT id, name FROM feeds"))
         feed_map = {row["name"]: row["id"] for row in result.mappings()}
@@ -85,6 +91,7 @@ def update_feeds():
 
     return JSONResponse(content=items)
 
+#Endpoint, add a new feed to the database
 @app.post("/add_feed", status_code=status.HTTP_204_NO_CONTENT)
 def add_feed(name, url):
     
@@ -105,7 +112,7 @@ def add_feed(name, url):
                     ), [{"name": source, "uname": name, "url": url}]
                 )
 
-
+#Endpoint, removes a feed from the database
 @app.delete("/remove_feed", status_code=status.HTTP_204_NO_CONTENT)
 def remove_feed(name):
     with db.engine.begin() as connection:
@@ -122,6 +129,7 @@ class feeds(BaseModel):
     user_name: str
     url: str
 
+#Enpoint, lists all active feeds in database
 @app.get("/list_feeds", response_model=List[feeds])
 def list_feeds():
     with db.engine.begin() as connection:
