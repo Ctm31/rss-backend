@@ -43,6 +43,7 @@ class ArticleOut(BaseModel):
     timestamp: datetime
     title: str
     link: str
+    user_name: str
 
 #Endpoint, returns the title, link, published date of the 
 #100 most recent articles in the database
@@ -52,8 +53,9 @@ def get_feeds():
         res = connection.execute(
                     sqlalchemy.text(
                         """
-                        SELECT timestamp, title, link
-                        FROM articles
+                        SELECT timestamp, title, link, f.user_name
+                        FROM articles AS a
+                        JOIN feeds AS f ON a.feed_source = f.id
                         ORDER BY timestamp DESC
                         LIMIT 100
                         """
