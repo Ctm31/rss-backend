@@ -34,7 +34,6 @@ def fetch_feeds():
                 "source": feed.feed.title
             })
     
-    # Sort by published date (if available)
     all_items.sort(key=lambda x: x["published"], reverse=True)
     return all_items
 
