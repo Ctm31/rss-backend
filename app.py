@@ -77,12 +77,11 @@ def update_feeds():
         result = connection.execute(sqlalchemy.text("SELECT id, name FROM feeds"))
         feed_map = {row["name"]: row["id"] for row in result.mappings()}
 
-    #add deduping
-
     with db.engine.begin() as connection:
         connection.execute(
             sqlalchemy.text("""INSERT INTO articles (timestamp, title, link, feed_source)
-                    VALUES (:timestamp, :title, :url, :source)"""),
+                            VALUES (:timestamp, :title, :url, :source)
+                            ON CONFLICT (link) DO NOTHING"""),
             [{
                 "timestamp": item.get("published", ""),
                 "title": item.get("title", ""),
