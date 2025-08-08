@@ -68,7 +68,7 @@ def get_feeds():
 
 #Enpoint, updates articles table with recent articles
 #TODO: Schedule with cron job
-@app.get("/update_feeds")
+@app.post("/update_feeds", status_code=status.HTTP_204_NO_CONTENT)
 def update_feeds():
     items = fetch_feeds()
 
@@ -90,8 +90,7 @@ def update_feeds():
                 "source": feed_map[item.get("source", "")]
             } for item in items]
         )
-
-    return JSONResponse(content=items)
+    
 
 #Endpoint, add a new feed to the database
 @app.post("/add_feed", status_code=status.HTTP_204_NO_CONTENT)
