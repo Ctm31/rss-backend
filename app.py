@@ -67,7 +67,6 @@ def get_feeds():
         return [ArticleOut(**row) for row in rows] 
 
 #Enpoint, updates articles table with recent articles
-#TODO: Schedule with cron job
 @app.post("/update_feeds", status_code=status.HTTP_204_NO_CONTENT)
 def update_feeds():
     items = fetch_feeds()
@@ -139,3 +138,17 @@ def list_feeds():
         rows = res.mappings().all()
         
         return rows
+    
+@app.get("/search", response_model=List[ArticleOut])
+def search(query):
+    with db.engine.begin() as connection:
+        res = connection.execute(sqlalchemy.text("""SELECT timestamp, title, link, f.user_name
+                                                    FROM articles AS a
+                                                    JOIN feeds AS f ON a.feed_source = f.id
+                                                    WHERE a.title ILIKE :query
+                                                    ORDER BY timestamp DESC
+                                                    LIMIT 100"""), [{"query": f"%{query}%"}])
+        
+        rows = res.mappings().all() 
+        
+        return [ArticleOut(**row) for row in rows] 
